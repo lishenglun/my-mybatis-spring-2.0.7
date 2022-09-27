@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+  <!--	1、引入外部的属性文件	-->
+  <!-- 方式一 -->
+  <context:property-placeholder location="classpath:msb/mybatis_06/db.properties"/>
+
+  <!--	方式二	-->
+  <!--  	<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">-->
+  <!--		<property name="location" value="classpath:msb/mybatis_06/db.properties"/>-->
+  <!--	</bean>-->
+
+  <context:component-scan base-package="com.msb.mybatis_06"/>
+
+  <bean class="com.alibaba.druid.pool.DruidDataSource" id="dataSource">
+    <property name="driverClassName" value="${jdbc.driver}"/>
+    <property name="username" value="${jdbc.username}"/>
+    <property name="password" value="${jdbc.password}"/>
+    <property name="url" value="${jdbc.url}"/>
+  </bean>
+
+  <bean id="sqlSessionFactoryBean" class="org.mybatis.spring.SqlSessionFactoryBean">
+    <property name="dataSource" ref="dataSource"/>
+    <!--  指定mapper配置文件  -->
+    <property name="mapperLocations" value="classpath:com/msb/mybatis_06/dao/*.xml"/>
+  </bean>
+
+  <!--  <bean id="userDao" class="org.mybatis.spring.mapper.MapperFactoryBean">-->
+  <!--    <property name="mapperInterface" value="com.msb.mybatis_06.dao.UserDao"/>-->
+  <!--    <property name="sqlSessionFactory" ref="sqlSessionFactoryBean"/>-->
+  <!--  </bean>-->
+
+  <!--
+
+  配置扫描的目录
+
+  题外：如果我们需要用到很多映射器的话，采用"配置MapperFactoryBean的方式创建映射器"的效率太低了，为了解决这个问题，就有了MapperScannerConfigurer，
+  我们可以使用MapperScannerConfigurer，让它扫描特定的包，自动帮我们批量地创建映射器，这样一来，就能大大减少配置的工作量。
+
+  题外：声明MapperScannerConfigurer类型的bean目的是不需要我们对于每个接口都注册一个MapperFactoryBean类型的bean，从而减少配置的工作量，
+  但是，不在配置文件中注册，并不代表这个MapperFactoryBean bean不存在，而是在扫描的过程中，通过编码的方式，动态为每个接口注册一个MapperFactoryBean
+
+  -->
+  <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+    <!--  在扫描的过程中，通过编码的方式，动态为每个接口注册一个MapperFactoryBean  -->
+    <property name="basePackage" value="com.msb.mybatis_06.dao"/>
+  </bean>
+
+  <!-- 开启 spring 对注解事务的支持 -->
+  <tx:annotation-driven transaction-manager="transactionManager"/>
+
+  <!--	配置事务管理器	-->
+  <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+    <property name="dataSource" ref="dataSource"/>
+  </bean>
+
+</beans>
